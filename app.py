@@ -7,23 +7,7 @@ from rembg import remove
 
 
 class Overlay_Product_App:
-    # def construct_app(self):
-    #     st.title("Overlay Product")
-    #     uploaded_product = st.file_uploader("Upload Your Product")
-    #     uploaded_bg = st.file_uploader("Upload Your Background", accept_multiple_files=True)
-    #     if uploaded_product:
-    #         with open(uploaded_product.name, "wb") as f:
-    #             f.write(uploaded_product.getbuffer())
-    #
-    #     bg_path = "backgrounds"
-    #
-    #     if uploaded_bg:
-    #         for i in range(len(uploaded_bg)):
-    #             with open(os.path.join(bg_path, "/", uploaded_bg[i].name), "wb"):
-    #                 f.write(uploaded_bg[i].getbuffer())
-    #
-    #         self.overlay_product(uploaded_product.name, bg_path)
-
+    
     def construct_app(self):
         st.title("Overlay Product")
         uploaded_product = st.file_uploader("Upload Your Product")
