@@ -107,7 +107,3 @@ dmypy.json
 /.idea/
 .idea
 .idea/
-
-*.png
-*.jpg
-*.jpeg
