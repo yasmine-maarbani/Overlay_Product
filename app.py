@@ -1,69 +1,109 @@
 import streamlit as st
-import os
+from streamlit_cropper import st_cropper
 from PIL import Image
-from rembg import remove
+import constants
 
+st.set_option('deprecation.showfileUploaderEncoding', False)
 
-class OverlayProductApp:
+st.set_page_config(page_title="AI Product Placement", page_icon=Image.open('logo.png'))
 
-    def construct_app(self):
-        st.title("Overlay Product")
-        uploaded_product = st.file_uploader("Upload Your Product")
-        uploaded_bg = st.file_uploader("Upload Your Background", accept_multiple_files=True)
-        bg_path = "backgrounds"
-        if uploaded_product:
-            with open(uploaded_product.name, "wb") as f:
-                f.write(uploaded_product.getbuffer())
-        if uploaded_bg:
-            try:
-                if not os.path.exists(bg_path):
-                    os.mkdir(bg_path)
-                else:
-                    for img in os.listdir(bg_path):
-                        os.remove(os.path.join(bg_path, img))
-                for i in range(len(uploaded_bg)):
-                    bg_file_path = os.path.join(bg_path, uploaded_bg[i].name)
-                    with open(bg_file_path, "wb") as f:
-                        f.write(uploaded_bg[i].getbuffer())
+st.markdown("""
+<style>
+footer {visibility : hidden;}
+</style>
+""", unsafe_allow_html=True)
 
-                output_dir = 'output_dir'
-                if not os.path.exists(output_dir):
-                    os.mkdir(output_dir)
-                else:
-                    for img in os.listdir(output_dir):
-                        os.remove(os.path.join(output_dir, img))
+st.title('Create AI Product Images :sparkles:')
+tab1, tab2 = st.tabs(["Step 1", "Step 2"])
 
-            except OSError as e:
-                st.write("Error occurred while saving background image: ", e)
-                return
-            st.write("Result:")
-            self.overlay_product(uploaded_product.name, bg_path)
+with tab1:
+    st.header("Upload Your Product :frame_with_picture:")
+    uploaded_product = st.file_uploader("Upload Your Product", type=["png", "jpg", "jpeg"],
+                                        label_visibility='collapsed')
 
-            for output_image_path in os.listdir(output_dir):
-                st.image(os.path.join(output_dir, output_image_path))
+    # crop the product
+    realtime_update = st.checkbox(label="Update in Real Time", value=True)
+    aspect_choice = st.radio(label="Aspect Ratio", options=["1:1", "16:9", "4:3"])
+    flip = st.checkbox(label="Flip the aspect ratio", value=False)
+    aspect_dict = {
+        "1:1": (1, 1),
+        "16:9": (16, 9),
+        "4:3": (4, 3),
+    }
+    aspect_ratio = aspect_dict[aspect_choice]
+    if flip:
+        aspect_ratio = aspect_ratio[::-1]
 
-    @staticmethod
-    def overlay_product(product_path, background_path):
-        output_dir = 'output_dir'
+    if uploaded_product:
+        img = Image.open(uploaded_product)
+        if not realtime_update:
+            st.write("Double click to save crop")
+        # Get a cropped image from the frontend
+        st.write("Make sure your product fits in the box")
+        cropped_img = st_cropper(img, realtime_update=realtime_update,
+                                 aspect_ratio=aspect_ratio)
+        # Manipulate cropped image at will
+        st.write("Preview")
+        st.image(cropped_img)
 
-        input_img = Image.open(product_path)
-        cleaned = remove(input_img)
+with tab2:
+    if 'prompt' not in st.session_state:
+        st.session_state.prompt = 'a product shot of a '
 
-        for i, bg in enumerate(os.listdir(background_path)):
-            background = Image.open(os.path.join(background_path, bg))
-            bg_w, bg_h = background.size
+    prompt = 'a product shot of a '
 
-            resized = cleaned.resize((int(min(bg_w, bg_h) * 0.75), int(min(bg_w, bg_h) * 0.75)))
-            img_w, img_h = resized.size
+    pt = st.header(prompt)
+    st.button("Generate", type="primary", use_container_width=True)
 
-            offset = ((bg_w - img_w) // 2, (bg_h - img_h) // 2)
+    # selecting a product
+    product = st.text_input('Product', placeholder='bottle', max_chars=30)
+    if product:
+        prompt = prompt + product
+    else:
+        prompt = prompt + '[product]'
 
-            background.paste(resized, offset, resized)
+    # selecting a placement
+    placement_select = st.selectbox('Placement', constants.placement_select_options)
+    if placement_select == "custom":
+        placement_text = st.text_input('Placement-text', label_visibility='collapsed',
+                                       placeholder='Example : on a smooth circular gradient platform',
+                                       max_chars=30)
+        prompt = prompt + ' ' + placement_text
+    elif placement_select == "None":
+        pass
+    else:
+        placement_text = st.selectbox('Placement-text',
+                                      constants.placement_options,
+                                      label_visibility='collapsed')
+        prompt = prompt + ' ' + placement_select + ' ' + placement_text
 
-            output_path = os.path.join(output_dir, f"{i}.jpg")
-            background.save(output_path)
+    # selecting a surrounding
+    surrounding_select = st.selectbox('Surrounding', constants.surrounding_select_options)
+    if surrounding_select == "custom":
+        surrounding_text = st.text_input('Surrounding-text', label_visibility='collapsed',
+                                         placeholder='Example : next to flowers', max_chars=30)
+        prompt = prompt + ", " + surrounding_text
+    elif surrounding_select == "None":
+        pass
+    else:
+        surrounding_text = st.selectbox('Surrounding-text',
+                                        constants.surrounding_options,
+                                        label_visibility='collapsed')
+        prompt = prompt + ", " + surrounding_select + ' ' + surrounding_text
 
+    # selecting a background
+    background_select = st.selectbox('Background', constants.background_select_options)
+    if background_select == "custom":
+        background_text = st.text_input('Background-text', label_visibility='collapsed',
+                                        placeholder='Example : in front of a gradient background', max_chars=30)
+        prompt = prompt + ", " + background_text
+    elif background_select == "None":
+        pass
+    else:
+        background_text = st.selectbox('Background-text',
+                                       constants.background_options,
+                                       label_visibility='collapsed')
+        prompt = prompt + ", " + background_select + ' ' + background_text
 
-# Call the app
-app = OverlayProductApp()
-app.construct_app()
+    num_images = st.slider("number of images to generate", 1, 3, step=1)
+    pt.text_area('prompt', value=prompt, disabled=True)
