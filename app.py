@@ -47,9 +47,6 @@ with tab1:
         st.image(cropped_img)
 
 with tab2:
-    if 'prompt' not in st.session_state:
-        st.session_state.prompt = 'a product shot of a '
-
     prompt = 'a product shot of a '
 
     pt = st.header(prompt)
