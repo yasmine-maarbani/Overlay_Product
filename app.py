@@ -1,5 +1,7 @@
 import streamlit as st
+import numpy as np
 from streamlit_cropper import st_cropper
+from rembg import remove
 from PIL import Image
 import constants
 
@@ -9,6 +11,7 @@ st.set_page_config(page_title="AI Product Placement", page_icon=Image.open('logo
 
 st.markdown("""
 <style>
+section[data-testid="stSidebar"] {display: none;}
 footer {visibility : hidden;}
 </style>
 """, unsafe_allow_html=True)
@@ -23,34 +26,45 @@ with tab1:
 
     # crop the product
     realtime_update = st.checkbox(label="Update in Real Time", value=True)
-    aspect_choice = st.radio(label="Aspect Ratio", options=["1:1", "16:9", "4:3"])
-    flip = st.checkbox(label="Flip the aspect ratio", value=False)
-    aspect_dict = {
-        "1:1": (1, 1),
-        "16:9": (16, 9),
-        "4:3": (4, 3),
-    }
-    aspect_ratio = aspect_dict[aspect_choice]
-    if flip:
-        aspect_ratio = aspect_ratio[::-1]
 
     if uploaded_product:
         img = Image.open(uploaded_product)
         if not realtime_update:
             st.write("Double click to save crop")
-        # Get a cropped image from the frontend
+
         st.write("Make sure your product fits in the box")
-        cropped_img = st_cropper(img, realtime_update=realtime_update,
-                                 aspect_ratio=aspect_ratio)
-        # Manipulate cropped image at will
-        st.write("Preview")
+
+        cropped_img = st_cropper(img, realtime_update=realtime_update)
+        cropped_img = Image.fromarray(np.uint8(cropped_img))
+        cropped_img.save("cropped.png")
+
+        # extract the product
+        cleaned = remove(cropped_img)
+
+        st.header("Preview")
+
+        st.write("Cropped")
         st.image(cropped_img)
+
+        st.write("Cleaned")
+        st.image(cleaned)
 
 with tab2:
     prompt = 'a product shot of a '
 
     pt = st.header(prompt)
-    st.button("Generate", type="primary", use_container_width=True)
+    generate = st.button("Generate", type="primary", use_container_width=True)
+    aspect_choice = st.selectbox(label="Aspect Ratio", options=("1:1", "16:9", "4:3", "9:16", "3:4"))
+    aspect_dict = {
+        "1:1": (1, 1),
+        "16:9": (16, 9),
+        "4:3": (4, 3),
+        "9:16": (9, 16),
+        "3:4": (3, 4),
+    }
+    aspect_ratio = aspect_dict[aspect_choice]
+
+    num_images = st.slider("number of images to generate", 1, 3, step=1)
 
     # selecting a product
     product = st.text_input('Product', placeholder='bottle', max_chars=30)
@@ -102,5 +116,4 @@ with tab2:
                                        label_visibility='collapsed')
         prompt = prompt + ", " + background_select + ' ' + background_text
 
-    num_images = st.slider("number of images to generate", 1, 3, step=1)
     pt.text_area('prompt', value=prompt, disabled=True)
