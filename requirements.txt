@@ -5,3 +5,4 @@ requests~=2.30.0
 numpy~=1.24.3
 boto3~=1.26.129
 botocore~=1.29.129
+streamlit-cropper~=0.2.1
