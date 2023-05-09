@@ -144,8 +144,8 @@ elif st.session_state.page == 2:
 
     cols = st.columns(num_images)
 
-    if "output_dir" not in os.listdir():
-        os.mkdir("output_dir")
+    if "output_dir" not in os.listdir("./"):
+        os.mkdir("./output_dir")
 
     for i, col in enumerate(cols):
         col.image(st.session_state.results[i], use_column_width=True)
