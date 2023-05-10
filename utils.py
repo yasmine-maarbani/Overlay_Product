@@ -1,9 +1,12 @@
 import os
 import logging
+import dotenv
 import boto3
 from PIL import Image
 from botocore.exceptions import ClientError
 import requests
+
+dotenv.load_dotenv()
 
 
 def upload_to_aws(file_name, bucket, object_name=None):
@@ -159,7 +162,7 @@ def generate_images(prompt, aspect_ratio, num_images):
         for img_url in res:
             img = Image.open(requests.get(img_url, stream=True).raw).convert("RGBA")
             img = patch(clean_product_image, img)
-            path = "./output_dir/" + img_url.split("/")[-1]
+            path = "output_dir/" + img_url.split("/")[-1]
             img.save(path)
             final_images.append(path)
 
