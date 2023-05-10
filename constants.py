@@ -27,7 +27,7 @@ background_options = [
     'marsh with sunlight streaming down in the background', 'flowers', 'forest in the background',
     'forest with sunlight streaming down in the background', 'jungle in the background', 'nature in the background',
     'garden in the background', 'soft shadows in the background', 'lighthouse by the sea in the background',
-    'pink sunset abd ocean in the background', 'a vineyard in the background', 'orange sunset in the background',
+    'pink sunset and ocean in the background', 'a vineyard in the background', 'orange sunset in the background',
     'fairy lights in the background', 'luxury cafe in the background', 'bokeh in the background',
     'a white circular window',
 ]

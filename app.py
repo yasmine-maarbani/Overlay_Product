@@ -20,6 +20,17 @@ footer {visibility : hidden;}
 if 'page' not in st.session_state:
     st.session_state.page = 1
 
+if 'product' not in st.session_state:
+    st.session_state.product = None
+
+
+def clear_images(skip=None):
+    for file in os.listdir("./"):
+        if file not in ["logo.png", "gray_background.jpeg"]:
+            if file.split('.')[-1] in ["png", "jpg", "jpeg"] and file != skip:
+                os.remove(file)
+
+
 if st.session_state.page == 1:
     st.title('Create AI Product Images :sparkles:')
     tab1, tab2 = st.tabs(["Step 1", "Step 2"])
@@ -28,36 +39,47 @@ if st.session_state.page == 1:
         st.header("Upload Your Product :frame_with_picture:")
         uploaded_product = st.file_uploader("Upload Your Product", type=["png", "jpg", "jpeg"],
                                             label_visibility='collapsed')
-
-        # crop the product
-        realtime_update = st.checkbox(label="Update in Real Time", value=True)
-
         if uploaded_product:
-            img = Image.open(uploaded_product)
-            if not realtime_update:
-                st.write("Double click to save crop")
+            st.session_state.product = None
 
-            st.write("Make sure your product fits in the box")
+        # reuse the uploaded product in case of regenerate
+        if st.session_state.product is not None:
+            product_path = st.session_state.product
+            clear_images(skip=st.session_state.product)
+            st.header(":warning: :red[Reusing the uploaded product]")
+            st.subheader("you can upload a new one if you want")
+        else:
 
-            cropped_img = st_cropper(img, realtime_update=realtime_update)
-            cropped_img = Image.fromarray(np.uint8(cropped_img))
+            # crop the product
+            realtime_update = st.checkbox(label="Update in Real Time", value=True)
 
-            for f in os.listdir("./"):
-                if f not in ["logo.png", "gray_background.jpeg"]:
-                    if f.endswith(".png") or f.endswith(".jpg") or f.endswith(".jpeg"):
-                        os.remove(f)
+            if uploaded_product:
+                img = Image.open(uploaded_product)
+                if not realtime_update:
+                    st.write("Double click to save crop")
 
-            # extract the product
-            cleaned = remove(cropped_img)
-            cleaned.save("product_" + uploaded_product.name.split('.')[0].replace(" ", "_") + '_cleaned.png')
+                st.write("Make sure your product fits in the box")
 
-            st.header("Preview")
+                cropped_img = st_cropper(img, realtime_update=realtime_update)
+                cropped_img = Image.fromarray(np.uint8(cropped_img))
 
-            st.write("Cropped")
-            st.image(cropped_img)
+                clear_images()
 
-            st.write("Cleaned")
-            st.image(cleaned)
+                # extract the product
+                cleaned = remove(cropped_img)
+
+                product_path = st.session_state.product or f"product_" \
+                                                           f"{uploaded_product.name.split('.')[0].replace(' ','_')}" \
+                                                           f"_cleaned.png"
+                cleaned.save(product_path)
+
+                st.header("Preview")
+
+                st.write("Cropped")
+                st.image(cropped_img)
+
+                st.write("Cleaned")
+                st.image(cleaned)
 
     with tab2:
         prompt = 'a product shot of a '
@@ -88,7 +110,7 @@ if st.session_state.page == 1:
         if placement_select == "custom":
             placement_text = st.text_input('Placement-text', label_visibility='collapsed',
                                            placeholder='Example : on a smooth circular gradient platform',
-                                           max_chars=30)
+                                           max_chars=40)
             prompt = prompt + ' ' + placement_text
         elif placement_select == "None":
             pass
@@ -102,7 +124,7 @@ if st.session_state.page == 1:
         surrounding_select = st.selectbox('Surrounding', constants.surrounding_select_options)
         if surrounding_select == "custom":
             surrounding_text = st.text_input('Surrounding-text', label_visibility='collapsed',
-                                             placeholder='Example : next to flowers', max_chars=30)
+                                             placeholder='Example : next to flowers', max_chars=40)
             prompt = prompt + ", " + surrounding_text
         elif surrounding_select == "None":
             pass
@@ -116,7 +138,7 @@ if st.session_state.page == 1:
         background_select = st.selectbox('Background', constants.background_select_options)
         if background_select == "custom":
             background_text = st.text_input('Background-text', label_visibility='collapsed',
-                                            placeholder='Example : in front of a gradient background', max_chars=30)
+                                            placeholder='Example : in front of a gradient background', max_chars=40)
             prompt = prompt + ", " + background_text
         elif background_select == "None":
             pass
@@ -129,16 +151,29 @@ if st.session_state.page == 1:
         pt.text_area('prompt', value=prompt, disabled=True)
 
         if generate:
-            res = utils.generate_images(prompt, aspect_ratio, num_images)
-
-            if res:
-                st.session_state.results = res
+            if uploaded_product or st.session_state.product:
+                st.session_state.product = product_path
+                st.session_state.prompt = prompt
+                st.session_state.aspect_ratio = aspect_ratio
+                st.session_state.num_images = num_images
                 st.session_state.page = 2
                 st.experimental_rerun()
             else:
-                st.error("Something went wrong :(")
+                pt.error("Please enter a product")
 
 elif st.session_state.page == 2:
+    st.title("Generating Images :hourglass_flowing_sand:")
+    st.subheader("This might take a while")
+    res = utils.generate_images(st.session_state.prompt, st.session_state.aspect_ratio, st.session_state.num_images)
+
+    if res:
+        st.session_state.results = res
+        st.session_state.page = 3
+        st.experimental_rerun()
+    else:
+        st.error("Something went wrong :(")
+
+elif st.session_state.page == 3:
     st.title('Your product Placement images are ready :sparkles:')
     num_images = len(st.session_state.results)
 
@@ -153,6 +188,6 @@ elif st.session_state.page == 2:
         with open(st.session_state.results[i], "rb") as image:
             col.download_button(label="Download", data=image, file_name=f"result_{i}.png")
 
-    if st.button("Generate More", type="primary", use_container_width=True):
+    if st.button("Get creative again", type="primary", use_container_width=True):
         st.session_state.page = 1
         st.experimental_rerun()
