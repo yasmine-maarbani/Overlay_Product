@@ -121,18 +121,18 @@ if st.session_state.page == 1:
             prompt = prompt + ' ' + placement_select + ' ' + placement_text
 
         # selecting a surrounding
-        surrounding_select = st.selectbox('Surrounding', constants.surrounding_select_options)
-        if surrounding_select == "custom":
-            surrounding_text = st.text_input('Surrounding-text', label_visibility='collapsed',
-                                             placeholder='Example : next to flowers', max_chars=40)
-            prompt = prompt + ", " + surrounding_text
-        elif surrounding_select == "None":
-            pass
-        else:
-            surrounding_text = st.selectbox('Surrounding-text',
-                                            constants.surrounding_options,
-                                            label_visibility='collapsed')
-            prompt = prompt + ", " + surrounding_select + ' ' + surrounding_text
+        # surrounding_select = st.selectbox('Surrounding', constants.surrounding_select_options)
+        # if surrounding_select == "custom":
+        #     surrounding_text = st.text_input('Surrounding-text', label_visibility='collapsed',
+        #                                      placeholder='Example : next to flowers', max_chars=40)
+        #     prompt = prompt + ", " + surrounding_text
+        # elif surrounding_select == "None":
+        #     pass
+        # else:
+        #     surrounding_text = st.selectbox('Surrounding-text',
+        #                                     constants.surrounding_options,
+        #                                     label_visibility='collapsed')
+        #     prompt = prompt + ", " + surrounding_select + ' ' + surrounding_text
 
         # selecting a background
         background_select = st.selectbox('Background', constants.background_select_options)
