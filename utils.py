@@ -51,33 +51,49 @@ def patch(img: Image.Image, bg: Image.Image) -> Image.Image:
     return bg
 
 
-def generate_images(prompt, aspect_ratio, num_images):
+def calculate_width_height(product_img_size, aspect_ratio=None, res_img_size=None):
+    if aspect_ratio is None:
+        width, height, product_img_ratio, res_img_ratio = res_img_size[0], res_img_size[1], \
+            product_img_size[0] / product_img_size[1], res_img_size[0] / res_img_size[1]
+    else:
+        product_img_ratio, res_img_ratio = aspect_ratio[0] / aspect_ratio[1], aspect_ratio[0] / aspect_ratio[1]
+        if res_img_ratio > 1:
+            width = 768
+            height = int(width / res_img_ratio)
+        elif res_img_ratio < 1:
+            height = 768
+            width = int(height * res_img_ratio)
+        else:
+            width = height = 768
+
+    if res_img_ratio > 1:
+        product_img_height = int(height * 0.8)
+        product_img_width = int(product_img_size * product_img_ratio)
+    elif res_img_ratio < 1:
+        product_img_width = int(width * 0.6)
+        product_img_height = int(product_img_width / product_img_ratio)
+    else:
+        product_img_width = int(width * 0.55)
+        product_img_height = int(product_img_width / product_img_ratio)
+
+    return width, height, product_img_width, product_img_height
+
+
+def generate_images(prompt, aspect_ratio=None, num_images=1, size=None):
+    """Generate the images
+
+    :param prompt: the prompt
+    :param aspect_ratio: the aspect ratio
+    :param num_images: the number of images to generate
+    :param size: the size of the image
+    :return: the generated images
+    """
+
     product_img_path = [f for f in os.listdir("./") if f.endswith("_cleaned.png")][0].replace(" ", "_")
     clean_product_image = Image.open(product_img_path)
 
-    product_img_width, product_img_height = clean_product_image.size
-
-    # ratio of the cleaned product image
-    ratio = product_img_width / product_img_height
-
-    # ratio of the result image
-    res_img_ratio = aspect_ratio[0] / aspect_ratio[1]
-
-    # calculate the width and height of the result image and the product image
-    if res_img_ratio > 1:
-        width = 1024
-        height = int(1024 / res_img_ratio)
-        product_img_height = int(height * 0.8)
-        product_img_width = int(product_img_height * ratio)
-    elif res_img_ratio < 1:
-        width = int(1024 * res_img_ratio)
-        height = 1024
-        product_img_width = int(width * 0.6)
-        product_img_height = int(product_img_width / ratio)
-    else:
-        width = height = 1024
-        product_img_width = int(width * 0.55)
-        product_img_height = int(product_img_width / ratio)
+    width, height, product_img_width, product_img_height = calculate_width_height(
+        clean_product_image.size, aspect_ratio, size)
 
     clean_product_image = clean_product_image.resize((product_img_width, product_img_height))
 

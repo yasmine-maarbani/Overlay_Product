@@ -90,20 +90,29 @@ if st.session_state.page == 1:
 
         pt = st.header(prompt)
         generate = st.button("Generate", type="primary", use_container_width=True)
-        aspect_choice = st.selectbox(label="Aspect Ratio", options=("1:1", "16:9", "4:3", "9:16", "3:4"))
+        aspect_choice = st.selectbox(label="Aspect Ratio", options=("1:1", "16:9", "4:3", "9:16", "3:4",
+                                                                    "Custom Dimensions"))
         aspect_dict = {
             "1:1": (1, 1),
             "16:9": (16, 9),
             "4:3": (4, 3),
             "9:16": (9, 16),
             "3:4": (3, 4),
+            "Custom Dimensions": None
         }
-        aspect_ratio = aspect_dict[aspect_choice]
 
-        num_images = st.slider("number of images to generate", 1, 3, step=1)
+        if aspect_choice == "Custom Dimensions":
+            width = st.number_input("width", 128, 768, step=1, value=512)
+            height = st.number_input("height", 128, 768, step=1, value=512)
+        else:
+            aspect_ratio = aspect_dict[aspect_choice]
+
+        num_images = st.number_input("number of images to generate", 1, 3, step=1, value=2)
+        st.divider()
 
         # selecting a product
         product = st.text_input('Product', placeholder='bottle', max_chars=30)
+        st.divider()
         if product:
             prompt = prompt + product
         else:
@@ -142,7 +151,10 @@ if st.session_state.page == 1:
             if uploaded_product or st.session_state.product:
                 st.session_state.product = product_path
                 st.session_state.prompt = prompt
-                st.session_state.aspect_ratio = aspect_ratio
+                if aspect_choice == "Custom Dimensions":
+                    st.session_state.size = (width, height)
+                else:
+                    st.session_state.aspect_ratio = aspect_ratio
                 st.session_state.num_images = num_images
                 st.session_state.page = 2
                 st.experimental_rerun()
@@ -152,7 +164,14 @@ if st.session_state.page == 1:
 elif st.session_state.page == 2:
     st.title("Generating Images :hourglass_flowing_sand:")
     st.subheader("This might take a while")
-    res = utils.generate_images(st.session_state.prompt, st.session_state.aspect_ratio, st.session_state.num_images)
+
+    if "size" in st.session_state:
+        res = utils.generate_images(prompt=st.session_state.prompt,
+                                    size=st.session_state.size,
+                                    num_images=st.session_state.num_images)
+    else:
+        res = utils.generate_images(prompt=st.session_state.prompt, size=st.session_state.aspect_ratio,
+                                    num_images=st.session_state.num_images)
 
     if res:
         st.session_state.results = res
