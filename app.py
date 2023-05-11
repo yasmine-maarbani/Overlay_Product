@@ -4,6 +4,7 @@ import numpy as np
 from streamlit_cropper import st_cropper
 from rembg import remove
 from PIL import Image
+from components import form_input
 import constants
 import utils
 
@@ -106,47 +107,31 @@ if st.session_state.page == 1:
             prompt = prompt + 'product'
 
         # selecting a placement
-        placement_select = st.selectbox('Placement', constants.placement_select_options)
-        if placement_select == "custom":
-            placement_text = st.text_input('Placement-text', label_visibility='collapsed',
-                                           placeholder='Example : on a smooth circular gradient platform',
-                                           max_chars=40)
-            prompt = prompt + ' ' + placement_text
-        elif placement_select == "None":
-            pass
-        else:
-            placement_text = st.selectbox('Placement-text',
-                                          constants.placement_options,
-                                          label_visibility='collapsed')
-            prompt = prompt + ' ' + placement_select + ' ' + placement_text
+        prompt = form_input(1,
+                            "Placement",
+                            constants.placement_select_options,
+                            "Placement-text",
+                            "Example : on a smooth circular gradient platform",
+                            constants.placement_options,
+                            prompt)
 
         # selecting a surrounding
-        # surrounding_select = st.selectbox('Surrounding', constants.surrounding_select_options)
-        # if surrounding_select == "custom":
-        #     surrounding_text = st.text_input('Surrounding-text', label_visibility='collapsed',
-        #                                      placeholder='Example : next to flowers', max_chars=40)
-        #     prompt = prompt + ", " + surrounding_text
-        # elif surrounding_select == "None":
-        #     pass
-        # else:
-        #     surrounding_text = st.selectbox('Surrounding-text',
-        #                                     constants.surrounding_options,
-        #                                     label_visibility='collapsed')
-        #     prompt = prompt + ", " + surrounding_select + ' ' + surrounding_text
+        prompt = form_input(2,
+                            "Surrounding",
+                            constants.surrounding_select_options,
+                            "Surrounding-text",
+                            "Example : next to flowers",
+                            constants.surrounding_options,
+                            prompt)
 
         # selecting a background
-        background_select = st.selectbox('Background', constants.background_select_options)
-        if background_select == "custom":
-            background_text = st.text_input('Background-text', label_visibility='collapsed',
-                                            placeholder='Example : in front of a gradient background', max_chars=40)
-            prompt = prompt + ", " + background_text
-        elif background_select == "None":
-            pass
-        else:
-            background_text = st.selectbox('Background-text',
-                                           constants.background_options,
-                                           label_visibility='collapsed')
-            prompt = prompt + ", " + background_select + ' ' + background_text
+        prompt = form_input(3,
+                            "Background",
+                            constants.background_select_options,
+                            "Background-text",
+                            "Example : in front of a gradient background",
+                            constants.background_options,
+                            prompt)
 
         pt.text_area('prompt', value=prompt, disabled=True)
 

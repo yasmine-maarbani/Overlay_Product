@@ -10,12 +10,12 @@ placement_options = [
     'grass', 'a grassy hill', 'glassy island on water', 'glacier'
 ]
 
-# surrounding_select_options = ('with', 'next to', 'surrounded by', 'custom', 'None')
-# surrounding_options = [
-#     'golden bokeh', 'golden sparkles', 'wavy fabrics', 'dried bark', 'fabric blobs', 'glass blobs', 'blossoms',
-#     'cherry blossoms', 'leaves', 'autumn leaves', 'fall leaves', 'bubbles', 'daisies', 'violets', 'petals',
-#     'white flowers', 'pebbles', 'crystals'
-# ]
+surrounding_select_options = ('with', 'next to', 'surrounded by', 'custom', 'None')
+surrounding_options = [
+    'golden bokeh', 'golden sparkles', 'wavy fabrics', 'dried bark', 'fabric blobs', 'glass blobs', 'blossoms',
+    'cherry blossoms', 'leaves', 'autumn leaves', 'fall leaves', 'bubbles', 'daisies', 'violets', 'petals',
+    'white flowers', 'pebbles', 'crystals'
+]
 
 background_select_options = ('in front of', 'with', 'custom', 'None')
 background_options = [
