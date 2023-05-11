@@ -37,6 +37,39 @@ def upload_to_aws(file_name, bucket, object_name=None):
     return True, s3_url
 
 
+def upscale_image(image_url):
+    json = {
+            "key": os.environ["SD_API_KEY"],
+            "url": image_url,
+            "scale": 2,
+            "webhook": None,
+            "face_enhance": False
+        }
+    res_json = requests.post(json=json, url=os.environ["SD_UPSCALE_URL"]).json()
+
+    while res_json["status"] == "failed":
+        res_json = requests.post(os.environ["SD_UPSCALE_URL"], json=json).json()
+
+    res = res_json["output"]
+    res_id = res_json["id"]
+
+    while not res:
+        response = requests.post(
+            os.environ["SD_FETCH_URL"],
+            json={"key": os.environ["SD_API_KEY"], "request_id": res_id},
+            timeout=200,
+        )
+        if response.json()["status"] == "success":
+            res = response.json()["output"][0]
+            break
+        elif response.json()["status"] == "failed":
+            res_json = requests.post(os.environ["SD_API_URL"], json=json).json()
+            res = res_json["output"]
+            res_id = res_json["id"]
+
+    return res
+
+
 def patch(img: Image.Image, bg: Image.Image) -> Image.Image:
     """patch the image onto the background
 
@@ -56,7 +89,7 @@ def calculate_width_height(product_img_size, aspect_ratio=None, res_img_size=Non
         width, height, product_img_ratio, res_img_ratio = res_img_size[0], res_img_size[1], \
             product_img_size[0] / product_img_size[1], res_img_size[0] / res_img_size[1]
     else:
-        product_img_ratio, res_img_ratio = aspect_ratio[0] / aspect_ratio[1], aspect_ratio[0] / aspect_ratio[1]
+        product_img_ratio, res_img_ratio = product_img_size[0] / product_img_size[1], aspect_ratio[0] / aspect_ratio[1]
         if res_img_ratio > 1:
             width = 768
             height = int(width / res_img_ratio)
@@ -79,13 +112,14 @@ def calculate_width_height(product_img_size, aspect_ratio=None, res_img_size=Non
     return width, height, product_img_width, product_img_height
 
 
-def generate_images(prompt, aspect_ratio=None, num_images=1, size=None):
+def generate_images(prompt, aspect_ratio=None, num_images=1, size=None, upscale=False):
     """Generate the images
 
     :param prompt: the prompt
     :param aspect_ratio: the aspect ratio
     :param num_images: the number of images to generate
     :param size: the size of the image
+    :param upscale: whether to upscale the images
     :return: the generated images
     """
 
@@ -162,7 +196,7 @@ def generate_images(prompt, aspect_ratio=None, num_images=1, size=None):
 
         while not res:
             response = requests.post(
-                "https://stablediffusionapi.com/api/v4/dreambooth/fetch",
+                os.environ["SD_FETCH_URL"],
                 json={"key": os.environ["SD_API_KEY"], "request_id": res_id},
                 timeout=200,
             )
@@ -174,13 +208,26 @@ def generate_images(prompt, aspect_ratio=None, num_images=1, size=None):
                 res = res_json["output"]
                 res_id = res_json["id"]
 
-        final_images = []
+        final_images = {
+            "images": [],
+            "upscaled_images": []
+        }
         for img_url in res:
             img = Image.open(requests.get(img_url, stream=True).raw).convert("RGBA")
             img = patch(clean_product_image, img)
             path = "output_dir/" + img_url.split("/")[-1]
             img.save(path)
-            final_images.append(path)
+            final_images["images"].append(path)
+            if upscale:
+                res3, url3 = upload_to_aws(path, os.environ["BUCKET_NAME"])
+                if res3:
+                    upscaled_img_url = upscale_image(url3)
+
+                    im = requests.get(upscaled_img_url, stream=True)
+                    path = "output_dir/" + upscaled_img_url.split("/")[-1]
+                    with open(path, "wb") as f:
+                        f.write(im.content)
+                    final_images["upscaled_images"].append(path)
 
         return final_images
 

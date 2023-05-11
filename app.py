@@ -72,9 +72,7 @@ if st.session_state.page == 1:
                 # extract the product
                 cleaned = remove(cropped_img)
 
-                product_path = st.session_state.product or f"product_" \
-                                                           f"{uploaded_product.name.split('.')[0].replace(' ','_')}" \
-                                                           f"_cleaned.png"
+                product_path = f"product_{uploaded_product.name.split('.')[0].replace(' ','_')}_cleaned.png"
                 cleaned.save(product_path)
 
                 st.header("Preview")
@@ -107,6 +105,7 @@ if st.session_state.page == 1:
         else:
             aspect_ratio = aspect_dict[aspect_choice]
 
+        upscale = st.checkbox("Upscale x2", value=False)
         num_images = st.number_input("number of images to generate", 1, 3, step=1, value=2)
         st.divider()
 
@@ -156,6 +155,8 @@ if st.session_state.page == 1:
                 else:
                     st.session_state.aspect_ratio = aspect_ratio
                 st.session_state.num_images = num_images
+                if upscale:
+                    st.session_state.upscale = upscale
                 st.session_state.page = 2
                 st.experimental_rerun()
             else:
@@ -165,13 +166,11 @@ elif st.session_state.page == 2:
     st.title("Generating Images :hourglass_flowing_sand:")
     st.subheader("This might take a while")
 
-    if "size" in st.session_state:
-        res = utils.generate_images(prompt=st.session_state.prompt,
-                                    size=st.session_state.size,
-                                    num_images=st.session_state.num_images)
-    else:
-        res = utils.generate_images(prompt=st.session_state.prompt, size=st.session_state.aspect_ratio,
-                                    num_images=st.session_state.num_images)
+    size = st.session_state.size if "size" in st.session_state else st.session_state.aspect_ratio
+    upscale = st.session_state.upscale if "upscale" in st.session_state else False
+
+    res = utils.generate_images(prompt=st.session_state.prompt, size=size, num_images=st.session_state.num_images,
+                                upscale=upscale)
 
     if res:
         st.session_state.results = res
@@ -182,7 +181,7 @@ elif st.session_state.page == 2:
 
 elif st.session_state.page == 3:
     st.title('Your product Placement images are ready :sparkles:')
-    num_images = len(st.session_state.results)
+    num_images = len(st.session_state.results["images"])
 
     cols = st.columns(num_images)
 
@@ -190,10 +189,20 @@ elif st.session_state.page == 3:
         os.mkdir("output_dir")
 
     for i, col in enumerate(cols):
-        col.image(st.session_state.results[i], use_column_width=True)
+        col.image(st.session_state.results["images"][i], use_column_width=True)
 
-        with open(st.session_state.results[i], "rb") as image:
+        with open(st.session_state.results["images"][i], "rb") as image:
             col.download_button(label="Download", data=image, file_name=f"result_{i}.png")
+
+    if "upscale" in st.session_state:
+        st.header("Upscaled Images")
+        upscale_cols = st.columns(num_images)
+
+        for i, col in enumerate(upscale_cols):
+            col.image(st.session_state.results["upscaled_images"][i], use_column_width=True)
+
+            with open(st.session_state.results["upscaled_images"][i], "rb") as image:
+                col.download_button(label="Download", data=image, file_name=f"result_{i}_upscaled.png")
 
     if st.button("Get creative again", type="primary", use_container_width=True):
         st.session_state.page = 1
