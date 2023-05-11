@@ -33,8 +33,11 @@ def clear_images(skip=None):
 
 
 if st.session_state.page == 1:
-    st.title('Create AI Product Images :sparkles:')
-    tab1, tab2 = st.tabs(["Step 1", "Step 2"])
+    title = st.title('Create AI Product Images :sparkles:')
+    tab1, tab2, tutorial = st.tabs(["Step 1", "Step 2", "Tutorial"])
+
+    with tutorial:
+        st.video("tutorial.mp4")
 
     with tab1:
         st.header("Upload Your Product :frame_with_picture:")
