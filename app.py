@@ -75,12 +75,7 @@ if st.session_state.page == 1:
                 product_path = f"product_{uploaded_product.name.split('.')[0].replace(' ','_')}_cleaned.png"
                 cleaned.save(product_path)
 
-                st.header("Preview")
-
-                st.write("Cropped")
-                st.image(cropped_img)
-
-                st.write("Cleaned")
+                st.header("Extracted Product")
                 st.image(cleaned)
 
     with tab2:

@@ -224,6 +224,9 @@ def generate_images(prompt, aspect_ratio=None, num_images=1, size=None, upscale=
                     upscaled_img_url = upscale_image(url3)
 
                     im = requests.get(upscaled_img_url, stream=True)
+                    while im.status_code != 200:
+                        im = requests.get(upscaled_img_url, stream=True)
+
                     path = "output_dir/" + upscaled_img_url.split("/")[-1]
                     with open(path, "wb") as f:
                         f.write(im.content)

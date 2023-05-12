@@ -21,7 +21,7 @@ def form_input(key: int, select_label: str, select_options: list, text_label: st
                              max_chars=40)
         weight = st.number_input(label="Strength", min_value=1.0, max_value=2.0, step=0.1, key=key)
         weight = round(weight, 2)
-        prompt = f"{prompt}, ({text}: {weight})" if weight != 1.0 else f"{prompt}, ({text})"
+        prompt = f"{prompt}, ({text}: {weight})" if weight != 1.0 else f"{prompt}, {text}"
     elif select == "None":
         pass
     else:
