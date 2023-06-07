@@ -161,10 +161,12 @@ elif st.session_state.page == 2:
     st.title("Generating Images :hourglass_flowing_sand:")
     st.subheader("This might take a while")
 
-    size = st.session_state.size if "size" in st.session_state else st.session_state.aspect_ratio
+    size = st.session_state.size if "size" in st.session_state else None
+    aspect_ratio = st.session_state.aspect_ratio if "aspect_ratio" in st.session_state else None
+
     upscale = st.session_state.upscale if "upscale" in st.session_state else False
 
-    res = utils.generate_images(prompt=st.session_state.prompt, size=size, num_images=st.session_state.num_images,
+    res = utils.generate_images(prompt=st.session_state.prompt, aspect_ratio=aspect_ratio, size=size, num_images=st.session_state.num_images,
                                 upscale=upscale)
 
     if res:
