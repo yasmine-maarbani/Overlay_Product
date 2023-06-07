@@ -55,7 +55,7 @@ def upscale_image(image_url):
 
     while not res:
         response = requests.post(
-            os.environ["SD_FETCH_URL"],
+            os.environ["SD_API_FETCH_URL"],
             json={"key": os.environ["SD_API_KEY"], "request_id": res_id},
             timeout=200,
         )
@@ -196,7 +196,7 @@ def generate_images(prompt, aspect_ratio=None, num_images=1, size=None, upscale=
 
         while not res:
             response = requests.post(
-                os.environ["SD_FETCH_URL"],
+                os.environ["SD_API_FETCH_URL"],
                 json={"key": os.environ["SD_API_KEY"], "request_id": res_id},
                 timeout=200,
             )
